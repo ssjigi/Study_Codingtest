@@ -50,8 +50,9 @@ class Solution2
     static int N, M, L;
     static int[][] map;
     static boolean[][] visit;
+    static boolean[][] countable;
 
-    static int result = 1;
+    static int count = 1;
 
     public static void main(String args[]) throws Exception
     {
@@ -82,27 +83,28 @@ class Solution2
             int C = sc.nextInt(); // 맨홀 뚜껑의 가로 위치
             L = sc.nextInt(); // 소요된 시간
 
-            System.out.println(N + " " + M + " " + R + " " + C + " " + L);
+            //System.out.println(N + " " + M + " " + R + " " + C + " " + L);
 
             map = new int[N][M];
             visit = new boolean[N][M];
+            countable = new boolean[N][M];
             for (int i = 0; i < N; i++) {
                 for (int j = 0; j < M; j++) {
                     map[i][j] = sc.nextInt();
-                    System.out.print(map[i][j] + " ");
+                    // System.out.print(map[i][j] + " ");
                 }
-                System.out.println();
+                // System.out.println();
             }
 
-            result = 0;
+            count = 0;
             Tile startTile = new Tile(R, C, 1);
             find(startTile, null);
 
-            System.out.println("#" + test_case + " " + result);
+            System.out.println("#" + test_case + " " + count);
         }
     }
 
-    static void find(Tile tile, int[][] prevTerrnel) {
+    static void find(Tile tile, int[] prevTerrnel) {
         // h, w 의 유효성 체크
         if (tile.x < 0 || tile.y < 0 || tile.x >= N || tile.y >= M) {
             //System.out.println("invalid tile");
@@ -127,13 +129,10 @@ class Solution2
         if (prevTerrnel != null && ternnel != T_ALL) {
             boolean connectable = false;
             for (int i = 0; i < ternnel.length; i++) {
-                for (int j = 0; j < prevTerrnel.length; j++) {
-                    if (ternnel[i][0] + prevTerrnel[j][0] == 0
-                    && ternnel[i][1] + prevTerrnel[j][1] == 0) {
-                        connectable = true;
-                    }
+                if (ternnel[i][0] + prevTerrnel[0] == 0
+                        && ternnel[i][1] + prevTerrnel[1] == 0) {
+                    connectable = true;
                 }
-
             }
 
             if (!connectable) {
@@ -146,12 +145,17 @@ class Solution2
             return;
         }
 
+        // 동일 tile에 대한 중복 count를 막기 위해
+        // 한 번 count 했던 tile을 다시 방문할 때는 count 추가 하지 않는다.
+        // 재귀 이용한 DFS 깊이우선탐색을 사용하므로 가능한 모든 경로 찾기 위해 중복 방문 허용 해야 함.
+        if (!countable[tile.x][tile.y]) {
+            countable[tile.x][tile.y] = true;
+            count++;
+        }
 
-        // 위 조건을 모두 통과 했으므로 도달 가능 타일임
-        result++;
         visit[tile.x][tile.y] = true;
 
-        System.out.println("find " + tile + ", result = " + result);
+        //System.out.println("find " + tile + ", count = " + count);
 
         for (int i = 0; i < ternnel.length; i++) {
             int w = ternnel[i][0]; // 현재 타일의 터널에 연결 될 다음 타일 x 좌표
@@ -159,10 +163,10 @@ class Solution2
             Tile nextTile = new Tile(tile.x + w, tile.y + h, tile.l+1);
             // System.out.println("next tile = " + nextTile);
 
-            find(nextTile, ternnel);
+            find(nextTile, ternnel[i]);
         }
 
-
+        visit[tile.x][tile.y] = false;
     }
 
     static int[][] getTernnel(int type) {
@@ -190,8 +194,6 @@ class Solution2
         int x, y;
         int l; // 현재 남은 시간
         boolean visit = false;
-
-        int[][] ternnel;
         public Tile(int x, int y, int l) {
             this.x = x;
             this.y = y;
